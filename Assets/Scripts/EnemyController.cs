@@ -10,7 +10,7 @@ public class EnemyController : MonoBehaviour
     void Start()
     {
         initialPosition = transform.position;
-        SetRandomTargetPosition();
+        targetPosition = SetRandomTargetPosition(); // Встановити випадкову початкову цільову позицію
     }
 
     void Update()
@@ -33,22 +33,30 @@ public class EnemyController : MonoBehaviour
 
     Vector2 SetRandomTargetPosition()
     {
-        // Встановлює випадкову цільову позицію в межах лабіринту
-        float randomX = initialPosition.x + Random.Range(-5f, 5f);
-        float randomY = initialPosition.y + Random.Range(-5f, 5f);
-        return new Vector2(randomX, randomY);
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Player"))
+        // Встановлює випадкову цільову позицію в межах лабіринту, враховуючи поточні розміри лабіринту
+        MazeGenerator mazeGenerator = FindObjectOfType<MazeGenerator>();
+        if (mazeGenerator != null)
         {
-            // Перезапустити рівень при зіткненні з гравцем
-            MazeGenerator mazeGenerator = FindObjectOfType<MazeGenerator>();
-            if (mazeGenerator != null)
-            {
-                mazeGenerator.GenerateAndDrawMaze();
-            }
+            float randomX = Random.Range(1, mazeGenerator.width * 2 - 1); // Враховуємо множник масштабу
+            float randomY = Random.Range(1, mazeGenerator.height * 2 - 1); // Враховуємо множник масштабу
+            return new Vector2(randomX, randomY);
+        }
+        else
+        {
+            // Якщо лабіринт не знайдено, повертаємо початкову позицію
+            return initialPosition;
         }
     }
+
+   private void OnTriggerEnter2D(Collider2D other)
+{
+    if (other.CompareTag("Player"))
+    {
+        PlayerController playerController = other.GetComponent<PlayerController>();
+        if (playerController != null && !playerController.isDead)
+        {
+            playerController.Die();
+        }
+    }
+}
 }
